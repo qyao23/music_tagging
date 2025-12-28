@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import Response
-from sqlalchemy import func, or_
+from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload, selectinload
 from app.database import get_db
 from app.models import Music, TaggingQuestion, TaggingRecord, TaggingTask, User
@@ -328,18 +328,31 @@ def download_tagging_records(
         raise BizException("无权限操作")
 
     music_list = db.query(Music).filter(Music.id.in_(music_ids)).options(
+        selectinload(Music.tagging_tasks).joinedload(TaggingTask.tagger),
         selectinload(Music.tagging_tasks).selectinload(TaggingTask.records).joinedload(TaggingRecord.question)
     ).all()
 
     # 构建导出数据
     export_data = []
     for music in music_list:
+        # 为每个音乐文件创建一个字典，键是问题，值是标注人员及其标注内容
+        music_data = {}
+        
+        # 遍历该音乐的所有打标任务
+        for task in [task for task in music.tagging_tasks if task.status == TaggingStatusEnum.REVIEWED]:
+            # 遍历该任务的所有打标记录
+            for record in task.records:
+                if record.question.title not in music_data:
+                    music_data[record.question.title] = {}
+                music_data[record.question.title][task.tagger.username] = record.selected_options
+        
+        # 将音乐文件路径作为键，其打标数据作为值，添加到列表中
         export_data.append({
-            "music": json.loads(music_to_response(music).model_dump_json()),
-            "tagging_tasks": [json.loads(tagging_task_to_response(task).model_dump_json()) for task in music.tagging_tasks if task.status == TaggingStatusEnum.REVIEWED],
+            music.filepath: music_data
         })
     
     # 转换为 JSON 字符串
+    # indent=2 表示使用 2 个空格缩进，让 JSON 更易读
     json_content = json.dumps(export_data, ensure_ascii=False, indent=2)
     
     # 返回文件下载响应
