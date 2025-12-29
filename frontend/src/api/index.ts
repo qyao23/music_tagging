@@ -41,7 +41,9 @@ api.interceptors.response.use(
       ElMessage.error(data.error || '请求失败')
       return Promise.reject(new Error(data.error || '请求失败'))
     }
-    return data
+    // 返回 response，但将 data 设置为 ApiResponse
+    // 这样 API 函数可以通过 response.data 获取 ApiResponse
+    return response
   },
   (error: AxiosError) => {
     if (error.response?.status === 401) {

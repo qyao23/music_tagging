@@ -8,31 +8,35 @@ import { UserRoleEnum } from '../types/enums'
 /**
  * 用户注册
  */
-export const register = (data: UserCreate): Promise<ApiResponse<number>> => {
-  return api.post('/user/register', data)
+export const register = async (data: UserCreate): Promise<ApiResponse<number>> => {
+  const response = await api.post('/user/register', data)
+  return response.data
 }
 
 /**
  * 用户登录
  */
-export const login = (data: UserLogin): Promise<ApiResponse<string>> => {
-  return api.post('/user/login', data)
+export const login = async (data: UserLogin): Promise<ApiResponse<string>> => {
+  const response = await api.post('/user/login', data)
+  return response.data
 }
 
 /**
  * 获取当前用户信息
  */
-export const getCurrentUser = (): Promise<ApiResponse<UserResponse>> => {
-  return api.get('/user/')
+export const getCurrentUser = async (): Promise<ApiResponse<UserResponse>> => {
+  const response = await api.get('/user/')
+  return response.data
 }
 
 /**
  * 获取用户列表
  */
-export const getUserList = (params?: {
+export const getUserList = async (params?: {
   keyword?: string
   role?: UserRoleEnum
 }): Promise<ApiResponse<UserResponse[]>> => {
-  return api.get('/user/list', { params })
+  const response = await api.get('/user/list', { params })
+  return response.data
 }
 

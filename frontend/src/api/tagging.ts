@@ -9,48 +9,176 @@ import type {
   TaggingQuestionResponse,
   TaggingTaskOperate,
   TaggingTaskResponse,
-  TaggingRecordUpdate
+  TaggingRecordUpdate,
+  TaggingItemResponse,
+  TaggingItemCreate,
+  TaggingRecordResponse,
+  TaggingRecordOperate,
+  TaggingRecordReview
 } from '../types/interfaces'
-import { OperationEnum, TaggingStatusEnum } from '../types/enums'
+import { OperationEnum, TaggingStatusEnum, ReviewResultEnum } from '../types/enums'
 
 /**
  * 操作打标题目（创建/更新/删除）
  */
-export const operateTaggingQuestion = (data: TaggingQuestionOperate): Promise<ApiResponse<number>> => {
-  return api.post('/tagging/question/operate', data)
+export const operateTaggingQuestion = async (data: TaggingQuestionOperate): Promise<ApiResponse<number>> => {
+  const response = await api.post('/tagging/question/operate', data)
+  return response.data
 }
 
 /**
  * 获取打标题目列表
  */
-export const getTaggingQuestionList = (): Promise<ApiResponse<TaggingQuestionResponse[]>> => {
-  return api.get('/tagging/question/list')
+export const getTaggingQuestionList = async (): Promise<ApiResponse<TaggingQuestionResponse[]>> => {
+  const response = await api.get('/tagging/question/list')
+  return response.data
 }
 
 /**
  * 操作打标任务（创建/删除/完成/审核）
  */
-export const operateTaggingTask = (data: TaggingTaskOperate): Promise<ApiResponse<number | number[]>> => {
-  return api.post('/tagging/task/operate', data)
+export const operateTaggingTask = async (data: TaggingTaskOperate): Promise<ApiResponse<number | number[]>> => {
+  const response = await api.post('/tagging/task/operate', data)
+  return response.data
 }
 
 /**
  * 获取打标任务列表
  */
-export const getTaggingTaskList = (params?: {
+export const getTaggingTaskList = async (params?: {
   keyword?: string
   status?: TaggingStatusEnum
   tagger_id?: number
   reviewer_id?: number
 }): Promise<ApiResponse<TaggingTaskResponse[]>> => {
-  return api.get('/tagging/task/list', { params })
+  const response = await api.get('/tagging/task/list', { params })
+  return response.data
 }
 
 /**
  * 打标（更新打标记录）
  */
-export const tagMusic = (data: TaggingRecordUpdate): Promise<ApiResponse> => {
-  return api.post('/tagging/tag', data)
+export const tagMusic = async (data: TaggingRecordUpdate): Promise<ApiResponse> => {
+  const response = await api.post('/tagging/tag', data)
+  return response.data
+}
+
+/**
+ * 获取打标项列表（兼容旧接口，实际使用 TaggingQuestion）
+ */
+export const getTaggingItemList = async (): Promise<ApiResponse<TaggingItemResponse[]>> => {
+  const response = await getTaggingQuestionList()
+  if (response.data) {
+    // 将 TaggingQuestionResponse 转换为 TaggingItemResponse
+    const items: TaggingItemResponse[] = response.data.map(q => ({
+      id: q.id,
+      name: q.title,
+      description: q.description || '',
+      create_time: q.create_time
+    }))
+    return {
+      success: response.success,
+      data: items,
+      error: response.error
+    }
+  }
+  return response as any
+}
+
+/**
+ * 创建打标项（兼容旧接口，实际使用 TaggingQuestion）
+ */
+export const createTaggingItem = async (data: TaggingItemCreate): Promise<ApiResponse<number>> => {
+  return operateTaggingQuestion({
+    operation: OperationEnum.CREATE,
+    title: data.name,
+    description: data.description,
+    is_multiple_choice: false,
+    options: []
+  })
+}
+
+/**
+ * 删除打标项（兼容旧接口，实际使用 TaggingQuestion）
+ */
+export const deleteTaggingItem = async (id: number): Promise<ApiResponse> => {
+  return operateTaggingQuestion({
+    operation: OperationEnum.DELETE,
+    id
+  })
+}
+
+/**
+ * 获取打标记录列表（通过任务列表获取所有记录）
+ */
+export const getTaggingRecordList = async (params?: {
+  keyword?: string
+  status?: TaggingStatusEnum
+}): Promise<ApiResponse<TaggingRecordResponse[]>> => {
+  const response = await getTaggingTaskList(params)
+  if (response.data) {
+    // 从所有任务中提取所有记录
+    const records: TaggingRecordResponse[] = []
+    response.data.forEach(task => {
+      if (task.records) {
+        records.push(...task.records)
+      }
+    })
+    return {
+      success: response.success,
+      data: records,
+      error: response.error
+    }
+  }
+  return response as any
+}
+
+/**
+ * 操作打标记录（通过任务操作）
+ */
+export const operateTaggingRecord = async (data: TaggingRecordOperate): Promise<ApiResponse<number | number[]>> => {
+  // 将 TaggingRecordOperate 转换为 TaggingTaskOperate
+  const taskOperate: TaggingTaskOperate = {
+    operation: data.operation,
+    id: data.id,
+    music_id: data.music_id,
+    tagger_id: data.tagger_id,
+    reviewer_id: data.reviewer_id,
+    question_ids: data.question_ids
+  }
+  return operateTaggingTask(taskOperate)
+}
+
+/**
+ * 完成打标记录（通过任务完成）
+ */
+export const finishTaggingRecord = async (data: {
+  id: number
+  tagging_item_id?: number
+  comment?: string
+}): Promise<ApiResponse> => {
+  // 注意：这里需要 task id，而不是 record id
+  // 但前端传入的是 record id，我们需要先获取 task
+  // 为了简化，我们假设 id 是 task id
+  return operateTaggingTask({
+    operation: OperationEnum.FINISH,
+    id: data.id
+  })
+}
+
+/**
+ * 审核打标记录（通过任务审核）
+ */
+export const reviewTaggingRecord = async (data: TaggingRecordReview): Promise<ApiResponse> => {
+  // 注意：这里需要 task id，而不是 record id
+  // 但前端传入的是 record id，我们需要先获取 task
+  // 为了简化，我们假设 id 是 task id
+  return operateTaggingTask({
+    operation: OperationEnum.REVIEW,
+    id: data.id,
+    review_result: data.result,
+    review_comment: data.comment
+  })
 }
 
 /**

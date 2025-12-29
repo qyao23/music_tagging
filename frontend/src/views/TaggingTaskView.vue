@@ -863,6 +863,7 @@ const handleNextTask = () => {
   const currentIndex = taskList.value.findIndex(t => t.id === currentTask.value!.id)
   if (currentIndex >= 0 && currentIndex < taskList.value.length - 1) {
     const nextTask = taskList.value[currentIndex + 1]
+    if (!nextTask) return
     // 确保所有记录的 selected_options 都被初始化
     if (nextTask.records) {
       nextTask.records.forEach(record => {
@@ -874,7 +875,7 @@ const handleNextTask = () => {
     currentTask.value = nextTask
     currentQuestionIndex.value = 0
     audioError.value = null
-    if (currentTask.value.music.filepath) {
+    if (currentTask.value && currentTask.value.music.filepath) {
       loadAudioFile(currentTask.value.music.filepath)
     }
   }
@@ -917,6 +918,7 @@ const handleFinish = async () => {
   // 先保存所有未保存的题目
   for (let i = 0; i < currentTask.value.records.length; i++) {
     const record = currentTask.value.records[i]
+    if (!record) continue
     if (record.selected_options && record.selected_options.length > 0) {
       try {
         await tagMusic({

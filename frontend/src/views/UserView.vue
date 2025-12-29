@@ -10,8 +10,6 @@
         placeholder="搜索用户名或ID"
         clearable
         style="width: 250px"
-        @clear="handleSearch"
-        @keyup.enter="handleSearch"
       >
         <template #prefix>
           <el-icon><Search /></el-icon>
@@ -27,7 +25,6 @@
         <el-option label="审核员" value="reviewer" />
         <el-option label="管理员" value="admin" />
       </el-select>
-      <el-button type="primary" @click="handleSearch">搜索</el-button>
     </div>
 
     <el-table
@@ -51,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 import { getUserList } from '../api/user'
 import type { UserResponse } from '../types/interfaces'
@@ -81,10 +78,18 @@ const loadUserList = async () => {
   }
 }
 
-// 搜索
-const handleSearch = () => {
-  loadUserList()
-}
+// 防抖函数
+let searchTimer: ReturnType<typeof setTimeout> | null = null
+
+// 监听筛选条件变化，实时生效（带防抖）
+watch([searchKeyword, filterRole], () => {
+  if (searchTimer) {
+    clearTimeout(searchTimer)
+  }
+  searchTimer = setTimeout(() => {
+    loadUserList()
+  }, 300)
+})
 
 // 获取角色文本
 const getRoleText = (role: UserRoleEnum) => {

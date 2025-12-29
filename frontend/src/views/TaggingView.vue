@@ -184,8 +184,11 @@ const loadTaskList = async () => {
       
       // 如果有任务，加载第一个
       if (pendingTasks.length > 0 && !currentTask.value) {
-        currentTask.value = pendingTasks[0]
-        currentQuestionIndex.value = 0
+        const firstTask = pendingTasks[0]
+        if (firstTask) {
+          currentTask.value = firstTask
+          currentQuestionIndex.value = 0
+        }
       } else if (pendingTasks.length === 0) {
         currentTask.value = null
       }
@@ -213,6 +216,10 @@ const handleSave = async () => {
   if (!currentTask.value) return
   
   const record = currentTask.value.records[currentQuestionIndex.value]
+  if (!record) {
+    ElMessage.warning('记录不存在')
+    return
+  }
   if (!record.selected_options || record.selected_options.length === 0) {
     ElMessage.warning('请先选择答案')
     return
@@ -244,6 +251,7 @@ const handleFinish = async () => {
   // 先保存所有未保存的题目
   for (let i = 0; i < currentTask.value.records.length; i++) {
     const record = currentTask.value.records[i]
+    if (!record) continue
     if (record.selected_options && record.selected_options.length > 0) {
       try {
         await tagMusic({
