@@ -176,7 +176,13 @@ const loadAudio = async (filepath: string) => {
         audioError.value = null
         audioRef.value?.removeEventListener('canplay', onCanPlay)
       }
+      // 监听 loadedmetadata 事件，清除可能的错误
+      const onLoadedMetadata = () => {
+        audioError.value = null
+        audioRef.value?.removeEventListener('loadedmetadata', onLoadedMetadata)
+      }
       audioRef.value.addEventListener('canplay', onCanPlay)
+      audioRef.value.addEventListener('loadedmetadata', onLoadedMetadata)
     }
   } catch (error) {
     console.error('Failed to load audio:', error)
@@ -185,10 +191,11 @@ const loadAudio = async (filepath: string) => {
   }
 }
 
-// 格式化时长
+// 格式化时长（只显示到秒，不显示小数）
 const formatDuration = (seconds: number) => {
-  const mins = Math.floor(seconds / 60)
-  const secs = seconds % 60
+  const totalSeconds = Math.floor(seconds) // 向下取整，只保留整数秒
+  const mins = Math.floor(totalSeconds / 60)
+  const secs = totalSeconds % 60
   return `${mins}:${secs.toString().padStart(2, '0')}`
 }
 
@@ -334,28 +341,43 @@ const handleLoadedMetadata = () => {
 // 处理音频加载错误
 const handleAudioError = (event: Event) => {
   const audio = event.target as HTMLAudioElement
-  if (audio) {
+  if (!audio || !audio.error) {
+    return
+  }
+  
+  // 延迟检查，给音频一些时间加载
+  setTimeout(() => {
+    // 如果音频已经可以播放，清除错误
+    if (audio.readyState >= 2 || !audio.error) {
+      audioError.value = null
+      return
+    }
+    
+    // 检查错误类型
     const error = audio.error
-    if (error) {
-      let errorMessage = '音频加载失败'
-      switch (error.code) {
-        case MediaError.MEDIA_ERR_ABORTED:
-          errorMessage = '音频加载被中止'
-          break
-        case MediaError.MEDIA_ERR_NETWORK:
-          errorMessage = '网络错误，无法加载音频'
-          break
-        case MediaError.MEDIA_ERR_DECODE:
-          errorMessage = '音频解码失败'
-          break
-        case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
-          errorMessage = '不支持的音频格式或文件路径无法访问'
-          break
-      }
+    let errorMessage = '音频加载失败'
+    
+    switch (error.code) {
+      case MediaError.MEDIA_ERR_ABORTED:
+        // 加载被中止通常不是真正的错误，可能是用户操作或切换任务
+        return
+      case MediaError.MEDIA_ERR_NETWORK:
+        errorMessage = '网络错误，无法加载音频'
+        break
+      case MediaError.MEDIA_ERR_DECODE:
+        errorMessage = '音频解码失败'
+        break
+      case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
+        errorMessage = '不支持的音频格式或文件路径无法访问'
+        break
+    }
+    
+    // 只有在确实无法播放时才显示错误
+    if (audio.readyState === 0 && audio.error) {
       audioError.value = errorMessage
       console.error('Audio error:', errorMessage, currentTask.value?.music.filepath)
     }
-  }
+  }, 5000) // 延迟5秒检查，给音频足够时间加载
 }
 
 // 监听任务变化，自动加载音频

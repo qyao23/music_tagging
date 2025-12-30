@@ -629,10 +629,11 @@ const loadAudioFile = async (filepath: string) => {
   }
 }
 
-// 格式化时长
+// 格式化时长（只显示到秒，不显示小数）
 const formatDuration = (seconds: number) => {
-  const mins = Math.floor(seconds / 60)
-  const secs = seconds % 60
+  const totalSeconds = Math.floor(seconds) // 向下取整，只保留整数秒
+  const mins = Math.floor(totalSeconds / 60)
+  const secs = totalSeconds % 60
   return `${mins}:${secs.toString().padStart(2, '0')}`
 }
 
@@ -1041,7 +1042,7 @@ const handleAudioError = (event: Event) => {
       audioError.value = errorMessage
       console.error('Audio error:', errorMessage, currentTask.value?.music.filepath)
     }
-  }, 1000) // 延迟1秒检查，给音频足够时间加载
+  }, 5000) // 延迟5秒检查，给音频足够时间加载
 }
 
 // 创建打标任务
