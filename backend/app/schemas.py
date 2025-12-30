@@ -86,7 +86,6 @@ class MusicResponse(BaseModel):
     id: int
     filepath: str
     filename: str
-    duration: int
     valid_tagging_count: int
     create_time: str
 

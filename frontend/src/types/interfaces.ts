@@ -40,7 +40,6 @@ export interface MusicResponse {
   id: number
   filepath: string
   filename: string
-  duration: number
   valid_tagging_count: number
   create_time: string
 }

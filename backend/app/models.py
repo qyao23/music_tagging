@@ -27,7 +27,6 @@ class Music(Base):
     id = Column(Integer, primary_key=True)
     filepath = Column(String, unique=True)
     filename = Column(String)
-    duration = Column(Integer)
     create_time = Column(DateTime(timezone = True), server_default = func.now())
 
     tagging_tasks = relationship("TaggingTask", foreign_keys="TaggingTask.music_id", back_populates="music")

@@ -3,7 +3,6 @@ import json
 from urllib.parse import quote
 from datetime import timezone
 from zoneinfo import ZoneInfo
-from pydub import AudioSegment
 from sqlalchemy.orm import Session, selectinload
 from fastapi import APIRouter, Depends, UploadFile, File
 from fastapi.responses import Response
@@ -75,22 +74,12 @@ async def create_music(
             error_paths.append(f"{filepath} (文件名已存在: {filename})")
             continue
         
-        try:
-            # 读取音频文件获取时长
-            audio = AudioSegment.from_file(filepath)
-            duration = int(len(audio) / 1000)  # 转换为秒（整数）
-            
-            # 创建音乐记录
-            db_music = Music(
-                filepath=filepath,
-                filename=filename,
-                duration=duration
-            )
-            db_musics.append(db_music)
-        except Exception as e:
-            # 如果音频文件读取失败，记录错误
-            error_paths.append(f"{filepath} (读取失败: {str(e)})")
-            continue
+        # 创建音乐记录
+        db_music = Music(
+            filepath=filepath,
+            filename=filename
+        )
+        db_musics.append(db_music)
     
     # 批量添加成功的音乐记录
     if db_musics:
@@ -198,7 +187,6 @@ def music_to_response(music: Music) -> MusicResponse:
         id=music.id,
         filepath=music.filepath,
         filename=music.filename,
-        duration=music.duration,
         valid_tagging_count=sum(1 for task in music.tagging_tasks if task.status == TaggingStatusEnum.REVIEWED),
         create_time=format_datetime_to_shanghai(music.create_time)
     )

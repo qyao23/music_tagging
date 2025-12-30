@@ -54,7 +54,6 @@
         width="55"
       />
       <el-table-column prop="filename" label="文件名" />
-      <el-table-column prop="duration" label="时长(秒)" width="120" />
       <el-table-column prop="valid_tagging_count" label="有效打标数" width="120" />
       <el-table-column prop="create_time" label="创建时间" width="180" />
       <el-table-column label="操作" width="120" v-if="userStore.isAdmin">
