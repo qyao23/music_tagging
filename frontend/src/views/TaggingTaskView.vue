@@ -23,7 +23,7 @@
       <div class="search-bar">
         <el-input
           v-model="filters.keyword"
-          placeholder="搜索音乐文件名、打标员、审核员"
+          placeholder="搜索音乐文件路径、打标员、审核员"
           clearable
           style="width: 300px"
         >
@@ -50,7 +50,7 @@
         stripe
         style="width: 100%"
       >
-        <el-table-column prop="music.filename" label="音乐文件名" />
+        <el-table-column prop="music.filepath" label="音乐文件路径" />
         <el-table-column label="状态" width="120">
           <template #default="{ row }">
             <el-tag :type="getStatusType(row.status)">
@@ -128,7 +128,7 @@
 
       <div class="tagging-content">
         <div class="music-info">
-          <h3>{{ currentTask.music.filename }}</h3>
+          <h3>{{ currentTask.music.filepath }}</h3>
           <p v-if="duration > 0">时长: {{ formatDuration(duration) }}</p>
         </div>
 
@@ -291,7 +291,7 @@
             <el-option
               v-for="music in musicList"
               :key="music.id"
-              :label="music.filename"
+              :label="music.filepath"
               :value="music.id"
             />
           </el-select>
@@ -361,7 +361,7 @@
       <div v-if="reviewTask" class="review-content">
         <!-- 音乐信息 -->
         <div class="review-music-info">
-          <h3>{{ reviewTask.music.filename }}</h3>
+          <h3>{{ reviewTask.music.filepath }}</h3>
           <p v-if="reviewDuration > 0">时长: {{ formatDuration(reviewDuration) }}</p>
           <p>打标员: {{ reviewTask.tagger.username }}</p>
           <p>打标时间: {{ reviewTask.tagging_time || '未完成' }}</p>

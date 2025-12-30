@@ -15,7 +15,7 @@
     <div class="filter-bar">
       <el-input
         v-model="filters.keyword"
-        placeholder="搜索ID或音乐文件名"
+        placeholder="搜索ID或音乐文件路径"
         clearable
         style="width: 250px"
         @clear="handleSearch"
@@ -46,7 +46,7 @@
       stripe
       style="width: 100%"
     >
-      <el-table-column prop="music.filename" label="音乐文件名" />
+      <el-table-column prop="music.filepath" label="音乐文件路径" />
       <el-table-column prop="tagging_item.name" label="打标项" />
       <el-table-column label="状态" width="120">
         <template #default="{ row }">
@@ -160,7 +160,7 @@
             <el-option
               v-for="music in musicList"
               :key="music.id"
-              :label="music.filename"
+              :label="music.filepath"
               :value="music.id"
             />
           </el-select>

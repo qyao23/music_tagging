@@ -2,7 +2,7 @@
   <div class="tagging-container">
     <div v-if="currentTask" class="tagging-content">
       <div class="music-info">
-        <h2>{{ currentTask.music.filename }}</h2>
+        <h2>{{ currentTask.music.filepath }}</h2>
         <p v-if="duration > 0">时长: {{ formatDuration(duration) }}</p>
       </div>
 

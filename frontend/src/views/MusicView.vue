@@ -31,7 +31,7 @@
     <div class="search-bar">
       <el-input
         v-model="searchKeyword"
-        placeholder="搜索音乐文件名"
+        placeholder="搜索音乐文件路径"
         clearable
         style="width: 300px"
       >
@@ -53,7 +53,7 @@
         type="selection"
         width="55"
       />
-      <el-table-column prop="filename" label="文件名" />
+      <el-table-column prop="filepath" label="文件路径" />
       <el-table-column prop="valid_tagging_count" label="有效打标数" width="120" />
       <el-table-column prop="create_time" label="创建时间" width="180" />
       <el-table-column label="操作" width="120" v-if="userStore.isAdmin">
@@ -111,7 +111,7 @@ const loadMusicList = async () => {
   loading.value = true
   try {
     const response = await getMusicList({
-      filename: searchKeyword.value || undefined,
+      filepath: searchKeyword.value || undefined,
       page: pagination.value.page,
       page_size: pagination.value.pageSize
     })
