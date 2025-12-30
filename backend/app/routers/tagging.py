@@ -284,13 +284,15 @@ def review_tagging_task(
 
 @router.get("/task/list")
 def list_tagging_task(
+    page: int,
+    page_size: int,
     keyword: str | None = None,
     status: TaggingStatusEnum | None = None,
     tagger_id: int | None = None,
     reviewer_id: int | None = None,
     db: Session = Depends(get_db)
 ):
-    """获取打标任务列表"""
+    """获取打标任务列表（分页）"""
     query = db.query(TaggingTask)
     if keyword:
         query = query.filter(
@@ -307,6 +309,12 @@ def list_tagging_task(
         query = query.filter(TaggingTask.tagger_id == tagger_id)
     if reviewer_id:
         query = query.filter(TaggingTask.reviewer_id == reviewer_id)
+    
+    # 获取总数
+    total = query.count()
+    
+    # 分页查询
+    offset = (page - 1) * page_size
     query = query.order_by(TaggingTask.create_time.desc())
     query = query.options(
         joinedload(TaggingTask.music),
@@ -315,7 +323,15 @@ def list_tagging_task(
         joinedload(TaggingTask.creator),
         selectinload(TaggingTask.records).joinedload(TaggingRecord.question)
     )
-    return ApiResponse.success_response([tagging_task_to_response(tagging_task) for tagging_task in query.all()])
+    task_list = query.offset(offset).limit(page_size).all()
+    
+    result = {
+        "items": [tagging_task_to_response(tagging_task) for tagging_task in task_list],
+        "total": total,
+        "page": page,
+        "page_size": page_size
+    }
+    return ApiResponse.success_response(result)
 
 @router.get("/download")
 def download_tagging_records(

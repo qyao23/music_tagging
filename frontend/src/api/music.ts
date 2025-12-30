@@ -32,11 +32,18 @@ export const deleteMusic = async (id: number): Promise<ApiResponse> => {
 }
 
 /**
- * 获取音乐列表
+ * 获取音乐列表（分页）
  */
 export const getMusicList = async (params?: {
   filename?: string
-}): Promise<ApiResponse<MusicResponse[]>> => {
+  page?: number
+  page_size?: number
+}): Promise<ApiResponse<{
+  items: MusicResponse[]
+  total: number
+  page: number
+  page_size: number
+}>> => {
   const response = await api.get('/music/', { params })
   return response.data
 }

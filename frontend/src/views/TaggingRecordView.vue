@@ -293,7 +293,12 @@ const loadRecordList = async () => {
     
     const response = await getTaggingRecordList(params)
     if (response.data) {
-      recordList.value = response.data
+      // 适配新的分页返回格式
+      if (Array.isArray(response.data)) {
+        recordList.value = response.data
+      } else {
+        recordList.value = response.data.items || []
+      }
     }
   } catch (error) {
     // 错误已在拦截器中处理

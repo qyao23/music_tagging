@@ -43,14 +43,21 @@ export const operateTaggingTask = async (data: TaggingTaskOperate): Promise<ApiR
 }
 
 /**
- * 获取打标任务列表
+ * 获取打标任务列表（分页）
  */
 export const getTaggingTaskList = async (params?: {
   keyword?: string
   status?: TaggingStatusEnum
   tagger_id?: number
   reviewer_id?: number
-}): Promise<ApiResponse<TaggingTaskResponse[]>> => {
+  page?: number
+  page_size?: number
+}): Promise<ApiResponse<{
+  items: TaggingTaskResponse[]
+  total: number
+  page: number
+  page_size: number
+}>> => {
   const response = await api.get('/tagging/task/list', { params })
   return response.data
 }
@@ -114,19 +121,31 @@ export const deleteTaggingItem = async (id: number): Promise<ApiResponse> => {
 export const getTaggingRecordList = async (params?: {
   keyword?: string
   status?: TaggingStatusEnum
-}): Promise<ApiResponse<TaggingRecordResponse[]>> => {
+  page?: number
+  page_size?: number
+}): Promise<ApiResponse<{
+  items: TaggingRecordResponse[]
+  total: number
+  page: number
+  page_size: number
+}>> => {
   const response = await getTaggingTaskList(params)
   if (response.data) {
     // 从所有任务中提取所有记录
     const records: TaggingRecordResponse[] = []
-    response.data.forEach(task => {
+    response.data.items.forEach(task => {
       if (task.records) {
         records.push(...task.records)
       }
     })
     return {
       success: response.success,
-      data: records,
+      data: {
+        items: records,
+        total: response.data.total,
+        page: response.data.page,
+        page_size: response.data.page_size
+      },
       error: response.error
     }
   }

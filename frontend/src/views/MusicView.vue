@@ -68,6 +68,18 @@
         </template>
       </el-table-column>
     </el-table>
+
+    <!-- 分页组件 -->
+    <el-pagination
+      v-model:current-page="pagination.page"
+      v-model:page-size="pagination.pageSize"
+      :page-sizes="[10, 20, 50, 100]"
+      :total="pagination.total"
+      layout="total, sizes, prev, pager, next, jumper"
+      @size-change="handleSizeChange"
+      @current-change="handlePageChange"
+      style="margin-top: 20px; justify-content: flex-end"
+    />
   </div>
 </template>
 
@@ -87,15 +99,25 @@ const downloading = ref(false)
 const searchKeyword = ref('')
 const selectedMusicIds = ref<number[]>([])
 
+// 分页信息
+const pagination = ref({
+  page: 1,
+  pageSize: 20,
+  total: 0
+})
+
 // 加载音乐列表
 const loadMusicList = async () => {
   loading.value = true
   try {
-    const response = await getMusicList(
-      searchKeyword.value ? { filename: searchKeyword.value } : undefined
-    )
+    const response = await getMusicList({
+      filename: searchKeyword.value || undefined,
+      page: pagination.value.page,
+      page_size: pagination.value.pageSize
+    })
     if (response.data) {
-      musicList.value = response.data
+      musicList.value = response.data.items
+      pagination.value.total = response.data.total
     }
   } catch (error) {
     // 错误已在拦截器中处理
@@ -104,8 +126,22 @@ const loadMusicList = async () => {
   }
 }
 
+// 分页大小变化
+const handleSizeChange = (size: number) => {
+  pagination.value.pageSize = size
+  pagination.value.page = 1
+  loadMusicList()
+}
+
+// 页码变化
+const handlePageChange = (page: number) => {
+  pagination.value.page = page
+  loadMusicList()
+}
+
 // 监听搜索关键词变化，实时加载音乐列表
 watch(searchKeyword, () => {
+  pagination.value.page = 1 // 搜索时重置到第一页
   loadMusicList()
 })
 

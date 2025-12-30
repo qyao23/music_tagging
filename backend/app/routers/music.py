@@ -134,15 +134,30 @@ def delete_music(
 
 @router.get("/")
 def list_music(
+    page: int,
+    page_size: int,
     filename: str | None = None,
     db: Session = Depends(get_db)
 ):
-    """获取音乐列表"""
+    """获取音乐列表（分页）"""
     query = db.query(Music).options(selectinload(Music.tagging_tasks))
     if filename:
         query = query.filter(Music.filename.like(f"%{filename}%"))
-    music_list = query.order_by(Music.filename.asc()).all()
-    return ApiResponse.success_response([music_to_response(music) for music in music_list])
+    
+    # 获取总数
+    total = query.count()
+    
+    # 分页查询
+    offset = (page - 1) * page_size
+    music_list = query.order_by(Music.filename.asc()).offset(offset).limit(page_size).all()
+    
+    result = {
+        "items": [music_to_response(music) for music in music_list],
+        "total": total,
+        "page": page,
+        "page_size": page_size
+    }
+    return ApiResponse.success_response(result)
 
 @router.get("/file")
 def get_music_file(

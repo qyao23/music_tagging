@@ -95,6 +95,18 @@
           </template>
         </el-table-column>
       </el-table>
+
+      <!-- 分页组件 -->
+      <el-pagination
+        v-model:current-page="pagination.page"
+        v-model:page-size="pagination.pageSize"
+        :page-sizes="[10, 20, 50, 100]"
+        :total="pagination.total"
+        layout="total, sizes, prev, pager, next, jumper"
+        @size-change="handleSizeChange"
+        @current-change="handlePageChange"
+        style="margin-top: 20px; justify-content: flex-end"
+      />
     </div>
 
     <!-- 打标界面 -->
@@ -757,10 +769,20 @@ const reviewRules: FormRules = {
 }
 
 // 加载打标任务列表
+// 分页信息
+const pagination = ref({
+  page: 1,
+  pageSize: 20,
+  total: 0
+})
+
 const loadTaskList = async () => {
   loading.value = true
   try {
-    const params: any = {}
+    const params: any = {
+      page: pagination.value.page,
+      page_size: pagination.value.pageSize
+    }
     if (filters.keyword) params.keyword = filters.keyword
     if (filters.status) params.status = filters.status as TaggingStatusEnum
     
@@ -783,7 +805,8 @@ const loadTaskList = async () => {
     
     const response = await getTaggingTaskList(params)
     if (response.data) {
-      taskList.value = response.data
+      taskList.value = response.data.items
+      pagination.value.total = response.data.total
     }
   } catch (error) {
     // 错误已在拦截器中处理
@@ -792,13 +815,28 @@ const loadTaskList = async () => {
   }
 }
 
+// 分页大小变化
+const handleSizeChange = (size: number) => {
+  pagination.value.pageSize = size
+  pagination.value.page = 1
+  loadTaskList()
+}
+
+// 页码变化
+const handlePageChange = (page: number) => {
+  pagination.value.page = page
+  loadTaskList()
+}
+
 // 视图模式切换
 const handleViewModeChange = () => {
+  pagination.value.page = 1 // 切换视图时重置到第一页
   loadTaskList()
 }
 
 // 监听筛选条件变化，实时加载任务列表
 watch([() => filters.keyword, () => filters.status, viewMode], () => {
+  pagination.value.page = 1 // 筛选时重置到第一页
   loadTaskList()
 }, { deep: true })
 
