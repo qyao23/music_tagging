@@ -1,7 +1,7 @@
 /**
  * 打标相关 API
  */
-import api from './index'
+import api, { API_BASE_URL } from './index'
 import axios from 'axios'
 import type {
   ApiResponse,
@@ -213,7 +213,7 @@ export const downloadTaggingRecords = async (musicIds: number[]): Promise<Blob> 
   })
   
   try {
-    const response = await axios.get(`http://127.0.0.1:8000/tagging/download?${params.toString()}`, {
+    const response = await axios.get(`${API_BASE_URL}/tagging/download?${params.toString()}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       },

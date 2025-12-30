@@ -136,13 +136,13 @@ def delete_music(
 def list_music(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    filename: str | None = None,
+    filepath: str | None = None,
     db: Session = Depends(get_db)
 ):
     """获取音乐列表（分页）"""
     query = db.query(Music).options(selectinload(Music.tagging_tasks))
-    if filename:
-        query = query.filter(Music.filename.like(f"%{filename}%"))
+    if filepath:
+        query = query.filter(Music.filepath.like(f"%{filepath}%"))
     
     # 获取总数
     total = query.count()
