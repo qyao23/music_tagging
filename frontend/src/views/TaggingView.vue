@@ -3,7 +3,7 @@
     <div v-if="currentTask" class="tagging-content">
       <div class="music-info">
         <h2>{{ currentTask.music.filename }}</h2>
-        <p>时长: {{ formatDuration(currentTask.music.duration) }}</p>
+        <p v-if="duration > 0">时长: {{ formatDuration(duration) }}</p>
       </div>
 
       <div class="audio-player">
@@ -13,6 +13,7 @@
           controls
           @ended="handleAudioEnded"
           @error="handleAudioError"
+          @loadedmetadata="handleLoadedMetadata"
         >
           您的浏览器不支持音频播放
         </audio>
@@ -128,6 +129,7 @@ const saving = ref(false)
 const finishing = ref(false)
 const audioRef = ref<HTMLAudioElement | null>(null)
 const audioError = ref<string | null>(null)
+const duration = ref(0)
 
 // 获取音频URL（直接使用文件路径）
 const getAudioUrl = (filepath: string) => {
@@ -190,9 +192,11 @@ const loadTaskList = async () => {
         if (firstTask) {
           currentTask.value = firstTask
           currentQuestionIndex.value = 0
+          duration.value = 0 // 重置时长，等待音频加载
         }
       } else if (pendingTasks.length === 0) {
         currentTask.value = null
+        duration.value = 0
       }
     }
   } catch (error) {
@@ -287,6 +291,13 @@ const handleFinish = async () => {
 // 处理音频播放结束
 const handleAudioEnded = () => {
   // 音频播放结束后可以自动播放下一首或提示
+}
+
+// 处理音频元数据加载
+const handleLoadedMetadata = () => {
+  if (audioRef.value) {
+    duration.value = audioRef.value.duration || 0
+  }
 }
 
 // 处理音频加载错误
