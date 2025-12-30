@@ -80,9 +80,10 @@ const loadStats = async () => {
   // 加载音乐总数（仅管理员）
   if (userStore.isAdmin) {
     try {
-      const response = await getMusicList()
+      const response = await getMusicList({ page: 1, page_size: 1 })
       if (response.data) {
-        musicCount.value = response.data.length
+        // 使用 total 获取总数，不需要实际数据
+        musicCount.value = response.data.total || 0
       }
     } catch (error) {
       // 错误已在拦截器中处理
@@ -91,13 +92,15 @@ const loadStats = async () => {
 
   // 加载打标记录统计
   try {
-    const response = await getTaggingTaskList()
+    const response = await getTaggingTaskList({ page: 1, page_size: 1000 })
     if (response.data) {
-      recordCount.value = response.data.length
-      pendingCount.value = response.data.filter(
+      // 适配新的分页返回格式
+      const items = response.data.items || []
+      recordCount.value = response.data.total || items.length
+      pendingCount.value = items.filter(
         r => r.status === TaggingStatusEnum.PENDING || r.status === TaggingStatusEnum.REJECTED
       ).length
-      taggedCount.value = response.data.filter(
+      taggedCount.value = items.filter(
         r => r.status === TaggingStatusEnum.TAGGED
       ).length
     }

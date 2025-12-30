@@ -1048,9 +1048,10 @@ const handleCreate = async () => {
   
   // 加载音乐列表
   try {
-    const musicResponse = await getMusicList()
+    const musicResponse = await getMusicList({ page: 1, page_size: 1000 })
     if (musicResponse.data) {
-      musicList.value = musicResponse.data
+      // 适配新的分页返回格式
+      musicList.value = musicResponse.data.items || []
     }
   } catch (error) {
     // 错误已在拦截器中处理

@@ -173,10 +173,12 @@ const canFinish = computed(() => {
 // 加载待打标任务列表
 const loadTaskList = async () => {
   try {
-    const response = await getTaggingTaskList()
+    const response = await getTaggingTaskList({ page: 1, page_size: 1000 })
     if (response.data) {
+      // 适配新的分页返回格式
+      const items = response.data.items || []
       // 过滤出当前用户的待打标任务（管理员可以看到所有任务）
-      const pendingTasks = response.data.filter(
+      const pendingTasks = items.filter(
         task => (task.status === TaggingStatusEnum.PENDING || task.status === TaggingStatusEnum.REJECTED) &&
                 (task.tagger.id === userStore.user?.id || userStore.isAdmin)
       )
