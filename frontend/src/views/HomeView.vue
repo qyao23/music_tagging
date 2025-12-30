@@ -18,7 +18,7 @@
           <el-card class="stat-card">
             <div class="stat-item">
               <div class="stat-label">音乐总数</div>
-              <div class="stat-value">{{ musicCount }}</div>
+              <div class="stat-value">{{ musicCount ?? 0 }}</div>
             </div>
           </el-card>
         </el-col>
@@ -26,7 +26,7 @@
           <el-card class="stat-card">
             <div class="stat-item">
               <div class="stat-label">打标记录</div>
-              <div class="stat-value">{{ recordCount }}</div>
+              <div class="stat-value">{{ recordCount ?? 0 }}</div>
             </div>
           </el-card>
         </el-col>
@@ -34,7 +34,7 @@
           <el-card class="stat-card">
             <div class="stat-item">
               <div class="stat-label">待打标</div>
-              <div class="stat-value">{{ pendingCount }}</div>
+              <div class="stat-value">{{ pendingCount ?? 0 }}</div>
             </div>
           </el-card>
         </el-col>
@@ -42,7 +42,7 @@
           <el-card class="stat-card">
             <div class="stat-item">
               <div class="stat-label">待审核</div>
-              <div class="stat-value">{{ taggedCount }}</div>
+              <div class="stat-value">{{ taggedCount ?? 0 }}</div>
             </div>
           </el-card>
         </el-col>
@@ -81,31 +81,43 @@ const loadStats = async () => {
   if (userStore.isAdmin) {
     try {
       const response = await getMusicList({ page: 1, page_size: 1 })
-      if (response.data) {
-        // 使用 total 获取总数，不需要实际数据
-        musicCount.value = response.data.total || 0
+      if (response && response.data) {
+        // response 是 ApiResponse，response.data 是分页数据
+        const total = response.data.total
+        musicCount.value = typeof total === 'number' ? total : 0
+      } else {
+        musicCount.value = 0
       }
     } catch (error) {
-      // 错误已在拦截器中处理
+      console.error('加载音乐总数失败:', error)
+      musicCount.value = 0
     }
   }
 
   // 加载打标记录统计
   try {
     const response = await getTaggingTaskList({ page: 1, page_size: 1000 })
-    if (response.data) {
-      // 适配新的分页返回格式
+    if (response && response.data) {
+      // response 是 ApiResponse，response.data 是分页数据
       const items = response.data.items || []
-      recordCount.value = response.data.total || items.length
+      const total = response.data.total
+      recordCount.value = typeof total === 'number' ? total : items.length
       pendingCount.value = items.filter(
         r => r.status === TaggingStatusEnum.PENDING || r.status === TaggingStatusEnum.REJECTED
       ).length
       taggedCount.value = items.filter(
         r => r.status === TaggingStatusEnum.TAGGED
       ).length
+    } else {
+      recordCount.value = 0
+      pendingCount.value = 0
+      taggedCount.value = 0
     }
   } catch (error) {
-    // 错误已在拦截器中处理
+    console.error('加载打标记录统计失败:', error)
+    recordCount.value = 0
+    pendingCount.value = 0
+    taggedCount.value = 0
   }
 }
 

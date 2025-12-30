@@ -115,12 +115,18 @@ const loadMusicList = async () => {
       page: pagination.value.page,
       page_size: pagination.value.pageSize
     })
-    if (response.data) {
-      musicList.value = response.data.items
-      pagination.value.total = response.data.total
+    if (response && response.data) {
+      // response 是 ApiResponse，response.data 是分页数据 {items: [], total: 0, ...}
+      musicList.value = response.data.items || []
+      pagination.value.total = response.data.total || 0
+    } else {
+      musicList.value = []
+      pagination.value.total = 0
     }
   } catch (error) {
     // 错误已在拦截器中处理
+    musicList.value = []
+    pagination.value.total = 0
   } finally {
     loading.value = false
   }

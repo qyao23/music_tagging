@@ -804,9 +804,13 @@ const loadTaskList = async () => {
     }
     
     const response = await getTaggingTaskList(params)
-    if (response.data) {
-      taskList.value = response.data.items
-      pagination.value.total = response.data.total
+    if (response && response.data) {
+      // response 是 ApiResponse，response.data 是分页数据 {items: [], total: 0, ...}
+      taskList.value = response.data.items || []
+      pagination.value.total = response.data.total || 0
+    } else {
+      taskList.value = []
+      pagination.value.total = 0
     }
   } catch (error) {
     // 错误已在拦截器中处理
