@@ -129,7 +129,7 @@
       <div class="tagging-content">
         <div class="music-info">
           <h3>{{ currentTask.music.filename }}</h3>
-          <p>时长: {{ formatDuration(currentTask.music.duration) }}</p>
+          <p v-if="duration > 0">时长: {{ formatDuration(duration) }}</p>
         </div>
 
         <div class="audio-player">
@@ -362,7 +362,7 @@
         <!-- 音乐信息 -->
         <div class="review-music-info">
           <h3>{{ reviewTask.music.filename }}</h3>
-          <p>时长: {{ formatDuration(reviewTask.music.duration) }}</p>
+          <p v-if="reviewDuration > 0">时长: {{ formatDuration(reviewDuration) }}</p>
           <p>打标员: {{ reviewTask.tagger.username }}</p>
           <p>打标时间: {{ reviewTask.tagging_time || '未完成' }}</p>
         </div>
@@ -1052,7 +1052,7 @@ const handleCreate = async () => {
   
   // 加载音乐列表
   try {
-    const musicResponse = await getMusicList({ page: 1, page_size: 1000 })
+    const musicResponse = await getMusicList({ page: 1, page_size: 100 })
     if (musicResponse.data) {
       // 适配新的分页返回格式
       musicList.value = musicResponse.data.items || []

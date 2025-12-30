@@ -96,12 +96,14 @@ const loadStats = async () => {
 
   // 加载打标记录统计
   try {
-    const response = await getTaggingTaskList({ page: 1, page_size: 1000 })
+    // 使用 page_size: 100 获取第一页数据用于统计
+    const response = await getTaggingTaskList({ page: 1, page_size: 100 })
     if (response && response.data) {
       // response 是 ApiResponse，response.data 是分页数据
       const items = response.data.items || []
       const total = response.data.total
       recordCount.value = typeof total === 'number' ? total : items.length
+      // 只统计第一页的数据（最多100条），如果需要精确统计所有数据，需要分页获取
       pendingCount.value = items.filter(
         r => r.status === TaggingStatusEnum.PENDING || r.status === TaggingStatusEnum.REJECTED
       ).length

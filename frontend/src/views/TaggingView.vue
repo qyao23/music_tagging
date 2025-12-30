@@ -173,7 +173,7 @@ const canFinish = computed(() => {
 // 加载待打标任务列表
 const loadTaskList = async () => {
   try {
-    const response = await getTaggingTaskList({ page: 1, page_size: 1000 })
+    const response = await getTaggingTaskList({ page: 1, page_size: 100 })
     if (response.data) {
       // 适配新的分页返回格式
       const items = response.data.items || []

@@ -426,7 +426,7 @@ const handleCreate = async () => {
   
   // 加载音乐列表
   try {
-    const musicResponse = await getMusicList({ page: 1, page_size: 1000 })
+    const musicResponse = await getMusicList({ page: 1, page_size: 100 })
     if (musicResponse.data) {
       // 适配新的分页返回格式
       musicList.value = musicResponse.data.items || []
