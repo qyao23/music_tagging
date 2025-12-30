@@ -25,8 +25,8 @@ class Music(Base):
     __tablename__ = "music"
 
     id = Column(Integer, primary_key=True)
-    filepath = Column(String)
-    filename = Column(String, unique=True)
+    filepath = Column(String, unique=True)
+    filename = Column(String)
     duration = Column(Integer)
     create_time = Column(DateTime(timezone = True), server_default = func.now())
 

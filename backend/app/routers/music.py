@@ -70,7 +70,7 @@ async def create_music(
         filename = os.path.splitext(os.path.basename(filepath))[0]
         
         # 检查是否已存在
-        exist_music = db.query(Music).filter(Music.filename == filename).first()
+        exist_music = db.query(Music).filter(Music.filepath == filepath).first()
         if exist_music:
             error_paths.append(f"{filepath} (文件名已存在: {filename})")
             continue
