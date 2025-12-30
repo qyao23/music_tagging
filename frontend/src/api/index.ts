@@ -8,7 +8,7 @@ import type { ApiResponse } from '../types/interfaces'
 
 // 创建 axios 实例
 const api: AxiosInstance = axios.create({
-  baseURL: 'http://127.0.0.1:8000',
+  baseURL: 'http://10.214.243.10:8000',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json'

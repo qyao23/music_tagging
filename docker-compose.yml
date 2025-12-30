@@ -3,6 +3,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    platform: linux/amd64
     container_name: music-tagging-backend
     ports:
       - 8000:8000
@@ -14,6 +15,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    platform: linux/amd64
     container_name: music-tagging-frontend
     ports:
       - 8080:80

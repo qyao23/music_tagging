@@ -1,4 +1,4 @@
-FROM node:22-alpine AS builder
+FROM --platform=linux/amd64 node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -10,7 +10,7 @@ COPY . .
 
 RUN npm run build
 
-FROM nginx:stable-alpine
+FROM --platform=linux/amd64 nginx:stable-alpine
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
