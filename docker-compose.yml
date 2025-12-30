@@ -9,7 +9,8 @@ services:
       - 8000:8000
     volumes:
       - ./backend:/app
-      - /mnt/nas/yjx:/mnt/nas/yjx
+      - /mnt/nas:/mnt/nas
+      - /mnt/nas_new:/mnt/nas_new
     restart: always
 
   frontend:
