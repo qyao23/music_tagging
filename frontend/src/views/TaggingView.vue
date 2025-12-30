@@ -9,7 +9,7 @@
       <div class="audio-player">
         <audio
           ref="audioRef"
-          :src="getAudioUrl(currentTask.music.filepath)"
+          :src="audioUrl"
           controls
           @ended="handleAudioEnded"
           @error="handleAudioError"
@@ -118,6 +118,7 @@ import {
   tagMusic,
   operateTaggingTask
 } from '../api/tagging'
+import { API_BASE_URL } from '../api/index'
 import type { TaggingTaskResponse, TaggingRecordUpdate } from '../types/interfaces'
 import { TaggingStatusEnum, OperationEnum } from '../types/enums'
 
@@ -130,31 +131,58 @@ const finishing = ref(false)
 const audioRef = ref<HTMLAudioElement | null>(null)
 const audioError = ref<string | null>(null)
 const duration = ref(0)
+const audioUrl = ref<string>('')
+let currentBlobUrl: string | null = null
 
-// 获取音频URL（直接使用文件路径）
-const getAudioUrl = (filepath: string) => {
-  // 清除之前的错误
+// 加载音频文件
+const loadAudio = async (filepath: string) => {
+  // 清除之前的错误和 blob URL
   audioError.value = null
+  if (currentBlobUrl) {
+    URL.revokeObjectURL(currentBlobUrl)
+    currentBlobUrl = null
+  }
+  audioUrl.value = ''
   
-  // 如果路径已经是完整的URL（http/https），直接返回
+  // 如果路径已经是完整的URL（http/https），直接使用
   if (filepath.startsWith('http://') || filepath.startsWith('https://')) {
-    return filepath
+    audioUrl.value = filepath
+    return
   }
   
-  // 如果是绝对路径（Unix/Mac/Windows），尝试使用 file:// 协议
-  // 注意：浏览器安全限制可能阻止 file:// 协议访问本地文件
-  if (filepath.startsWith('/') || /^[A-Za-z]:/.test(filepath)) {
-    // 对于本地文件路径，尝试使用 file:// 协议
-    // 但这种方式在浏览器中通常会被阻止
-    const fileUrl = filepath.startsWith('/') 
-      ? `file://${filepath}` 
-      : `file:///${filepath.replace(/\\/g, '/')}`
-    return fileUrl
+  try {
+    // 使用 fetch 获取音频文件，携带认证头
+    const token = localStorage.getItem('token')
+    const response = await fetch(`${API_BASE_URL}/music/file?path=${encodeURIComponent(filepath)}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    
+    // 创建 blob URL
+    const blob = await response.blob()
+    currentBlobUrl = URL.createObjectURL(blob)
+    audioUrl.value = currentBlobUrl
+    
+    // 等待音频元素加载，检查是否真的可以播放
+    if (audioRef.value) {
+      audioRef.value.load()
+      // 监听 canplay 事件，如果能播放就清除错误
+      const onCanPlay = () => {
+        audioError.value = null
+        audioRef.value?.removeEventListener('canplay', onCanPlay)
+      }
+      audioRef.value.addEventListener('canplay', onCanPlay)
+    }
+  } catch (error) {
+    console.error('Failed to load audio:', error)
+    audioError.value = '无法加载音频文件，请检查文件路径和权限'
+    audioUrl.value = ''
   }
-  
-  // 如果是相对路径，假设文件在服务器上，直接返回
-  // 浏览器会相对于当前页面解析
-  return filepath
 }
 
 // 格式化时长
@@ -193,10 +221,13 @@ const loadTaskList = async () => {
           currentTask.value = firstTask
           currentQuestionIndex.value = 0
           duration.value = 0 // 重置时长，等待音频加载
+          // 加载音频文件
+          await loadAudio(firstTask.music.filepath)
         }
       } else if (pendingTasks.length === 0) {
         currentTask.value = null
         duration.value = 0
+        audioUrl.value = ''
       }
     }
   } catch (error) {
@@ -326,6 +357,13 @@ const handleAudioError = (event: Event) => {
     }
   }
 }
+
+// 监听任务变化，自动加载音频
+watch(() => currentTask.value?.music.filepath, (newFilepath) => {
+  if (newFilepath) {
+    loadAudio(newFilepath)
+  }
+})
 
 onMounted(() => {
   loadTaskList()

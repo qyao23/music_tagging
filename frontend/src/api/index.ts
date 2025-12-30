@@ -59,3 +59,6 @@ api.interceptors.response.use(
 
 export default api
 
+// 导出 baseURL 供其他模块使用
+export const API_BASE_URL = api.defaults.baseURL || 'http://10.214.243.10:8000'
+

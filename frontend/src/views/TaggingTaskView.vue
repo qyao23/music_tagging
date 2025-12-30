@@ -528,6 +528,7 @@ import {
 import { getMusicList } from '../api/music'
 import { getTaggingQuestionList } from '../api/tagging'
 import { getUserList } from '../api/user'
+import { API_BASE_URL } from '../api/index'
 import type {
   TaggingTaskResponse,
   TaggingTaskOperate,
@@ -585,7 +586,7 @@ const loadAudioFile = async (filepath: string) => {
   try {
     // 使用 fetch 获取音频文件，携带认证头
     const token = localStorage.getItem('token')
-    const response = await fetch(`http://127.0.0.1:8000/music/file?path=${encodeURIComponent(filepath)}`, {
+    const response = await fetch(`${API_BASE_URL}/music/file?path=${encodeURIComponent(filepath)}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -1152,7 +1153,7 @@ const loadReviewAudioFile = async (filepath: string) => {
   
   try {
     const token = localStorage.getItem('token')
-    const response = await fetch(`http://127.0.0.1:8000/music/file?path=${encodeURIComponent(filepath)}`, {
+    const response = await fetch(`${API_BASE_URL}/music/file?path=${encodeURIComponent(filepath)}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
