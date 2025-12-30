@@ -9,7 +9,7 @@ import type { ApiResponse } from '../types/interfaces'
 // 创建 axios 实例
 const api: AxiosInstance = axios.create({
   baseURL: 'http://10.214.243.10:8000',
-  timeout: 10000,
+  timeout: 300000, // 5分钟超时，用于批量上传
   headers: {
     'Content-Type': 'application/json'
   }

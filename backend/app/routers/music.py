@@ -46,17 +46,20 @@ async def create_music(
     # 支持的音频格式
     supported_formats = ['.mp3', '.wav']
     
+    # 批量查询已存在的文件路径，避免逐条查询
+    existing_paths = set()
+    if file_paths:
+        existing_records = db.query(Music.filepath).filter(Music.filepath.in_(file_paths)).all()
+        existing_paths = {path[0] for path in existing_records}
+    
     db_musics: list[Music] = []
     error_paths: list[str] = []
     
     for filepath in file_paths:
-        if not os.path.exists(filepath):
-            error_paths.append(f"{filepath} (文件不存在)")
-            continue
-        
-        # 验证是否为文件（不是目录）
-        if not os.path.isfile(filepath):
-            error_paths.append(f"{filepath} (不是文件)")
+        # 检查是否已存在（使用批量查询的结果）
+        if filepath in existing_paths:
+            filename = os.path.splitext(os.path.basename(filepath))[0]
+            error_paths.append(f"{filepath} (文件已存在: {filename})")
             continue
         
         # 验证文件格式
@@ -65,14 +68,13 @@ async def create_music(
             error_paths.append(f"{filepath} (不支持的格式: {ext})")
             continue
         
+        # 快速检查文件是否存在（不检查是否为文件，减少IO）
+        if not os.path.exists(filepath):
+            error_paths.append(f"{filepath} (文件不存在)")
+            continue
+        
         # 获取文件名（不带扩展名）
         filename = os.path.splitext(os.path.basename(filepath))[0]
-        
-        # 检查是否已存在
-        exist_music = db.query(Music).filter(Music.filepath == filepath).first()
-        if exist_music:
-            error_paths.append(f"{filepath} (文件名已存在: {filename})")
-            continue
         
         # 创建音乐记录
         db_music = Music(
