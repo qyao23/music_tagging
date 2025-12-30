@@ -48,3 +48,16 @@ export const getMusicList = async (params?: {
   return response.data
 }
 
+/**
+ * 获取所有音乐列表（不分页，用于创建打标任务等场景）
+ */
+export const getAllMusicList = async (filepath?: string): Promise<ApiResponse<MusicResponse[]>> => {
+  const params: { filepath?: string } = {}
+  if (filepath) {
+    params.filepath = filepath
+  }
+  // 不传 page 和 page_size，后端会返回所有音乐
+  const response = await api.get('/music/', { params })
+  return response.data
+}
+

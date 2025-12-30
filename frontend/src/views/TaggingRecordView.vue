@@ -206,7 +206,7 @@ import {
   reviewTaggingRecord,
   getTaggingItemList
 } from '../api/tagging'
-import { getMusicList } from '../api/music'
+import { getAllMusicList } from '../api/music'
 import { getUserList } from '../api/user'
 import type {
   TaggingRecordResponse,
@@ -424,12 +424,12 @@ const handleCreate = async () => {
   createForm.tagger_id = undefined
   createForm.reviewer_id = undefined
   
-  // 加载音乐列表
+  // 加载音乐列表（获取所有音乐，不分页）
   try {
-    const musicResponse = await getMusicList({ page: 1, page_size: 100 })
+    const musicResponse = await getAllMusicList()
     if (musicResponse.data) {
-      // 适配新的分页返回格式
-      musicList.value = musicResponse.data.items || []
+      // 返回的是数组，不是分页对象
+      musicList.value = Array.isArray(musicResponse.data) ? musicResponse.data : []
     }
   } catch (error) {
     // 错误已在拦截器中处理

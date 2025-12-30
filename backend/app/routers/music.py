@@ -134,23 +134,29 @@ def delete_music(
 
 @router.get("/")
 def list_music(
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
     filepath: str | None = None,
+    page: int | None = Query(None, ge=1),
+    page_size: int | None = Query(None, ge=1, le=100),
     db: Session = Depends(get_db)
 ):
-    """获取音乐列表（分页）"""
+    """获取音乐列表
+    - 如果 page 或 page_size 为 None, 返回所有音乐(不分页)
+    - 如果都提供了，返回分页结果
+    """
     query = db.query(Music).options(selectinload(Music.tagging_tasks))
+    
+    # 如果有 filepath 搜索条件，添加过滤
     if filepath:
         query = query.filter(Music.filepath.like(f"%{filepath}%"))
     
-    # 获取总数
-    total = query.count()
+    # 如果不分页，返回所有音乐
+    if page is None or page_size is None:
+        music_list = query.order_by(Music.filename.asc()).all()
+        return ApiResponse.success_response([music_to_response(music) for music in music_list])
     
     # 分页查询
-    offset = (page - 1) * page_size
-    music_list = query.order_by(Music.filename.asc()).offset(offset).limit(page_size).all()
-    
+    total = query.count()
+    music_list = query.order_by(Music.filename.asc()).offset((page - 1) * page_size).limit(page_size).all()
     result = {
         "items": [music_to_response(music) for music in music_list],
         "total": total,
