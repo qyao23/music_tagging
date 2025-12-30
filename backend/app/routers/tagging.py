@@ -284,8 +284,8 @@ def review_tagging_task(
 
 @router.get("/task/list")
 def list_tagging_task(
-    page: int,
-    page_size: int,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
     keyword: str | None = None,
     status: TaggingStatusEnum | None = None,
     tagger_id: int | None = None,

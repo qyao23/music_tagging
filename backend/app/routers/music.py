@@ -4,7 +4,7 @@ from urllib.parse import quote
 from datetime import timezone
 from zoneinfo import ZoneInfo
 from sqlalchemy.orm import Session, selectinload
-from fastapi import APIRouter, Depends, UploadFile, File
+from fastapi import APIRouter, Depends, UploadFile, File, Query
 from fastapi.responses import Response
 from app.database import get_db
 from app.models import Music, TaggingTask, TaggingRecord, User
@@ -134,8 +134,8 @@ def delete_music(
 
 @router.get("/")
 def list_music(
-    page: int,
-    page_size: int,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
     filename: str | None = None,
     db: Session = Depends(get_db)
 ):
